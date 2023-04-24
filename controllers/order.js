@@ -50,13 +50,44 @@ exports.createOrder = (req, res, next) => {
     )    
 }
 
+exports.updaeOrder = (req, res, next ) => {
+    console.log(req.body);
+    console.log(req.params.orderId)
+    if(!req.params.orderId) {
+        return next(new Error("No order id found"));
+    }
+    const orderNum = req.body.orderNum;
+    conn.query(
+        `UPDATE orders SET 
+            paymentStatus = ${req.body.paymentStatus ? 1 : 0},
+            deliveryStatus=${req.body.deliveryStatus ? 1 : 0},
+            remark=COALESCE(${req.body.remark 
+                ? '"'+req.body.remark+'"' 
+                : null}, '')
+            WHERE orderNum=?`,
+            [orderNum],(err, data, fields) => {
+            if(err) return next(err);
+            conn.query("SELECT * FROM orders WHERE orderNum=?", [orderNum],
+            (err, data,fields)=>{
+                if(err) return next(err);
+                res.status(200).json({
+                    status: "success",
+                    length: data?.length,
+                    data: data,
+                })
+            })
+            }
+    );
+}
+
 exports.deleteOrder = (req, res, next) => {
     if(!req.params.orderId) {
-        return next(new Error("not order id found"));
+        return next(new Error("not orderNum found"));
     }
+    const orderNum = req.params.orderId;
     conn.query(
-        "DELETE FROM orders WHERE id=?",
-        [req.params.orderId],(err,fields) => {
+        "DELETE FROM orders WHERE orderNum=?",
+        [orderNum],(err,fields) => {
             if(err) return next(err);
             res.status(200).json({
                 status: "success",
@@ -64,4 +95,32 @@ exports.deleteOrder = (req, res, next) => {
             })
         }
     )
-    }
+}
+
+exports.deleteMany = (req, res, next) => {
+    console.log('params')
+    console.log(req.query.filter);
+    const arrOfid= JSON.parse(req.query.filter);
+    console.log(arrOfid.id)
+    console.log(arrOfid.id.length)
+    const ids = arrOfid.id;
+    /*
+    ids.map(id => {
+        console.log("the id " , id);
+        conn.query(
+            "DELETE FROM orders WHERE id=?",
+            [id],(err,fields) => {
+                if(err) return next(err); 
+            }
+        )}
+    );
+    */
+    conn.query("SELECT * FROM orders", (err, data,fields)=>{
+        if(err) return next(err);
+        res.status(200).json({
+            status: "success",
+            length: data?.length,
+            data: data,
+        })
+    })
+}
