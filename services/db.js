@@ -1,11 +1,11 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 const conn = mysql.createConnection({
-    host: 'db-mysql-lon1-64334-do-user-13476731-0.b.db.ondigitalocean.com',  
-    port: '25060',
-    user: 'doadmin',
-    password: 'AVNS_SZQJCJN3dyLY-mdI7Xy',
-    database: 'birrama_db'
+    host: process.env.Host,  
+    port: process.env.Port,
+    user: process.env.User,
+    password: process.env.Password,
+    database: process.env.Database 
     
 });
 
@@ -18,9 +18,3 @@ conn.connect((err)=> {
 });
 
 module.exports = conn;
-
-  /* host: 'localhost',
-    user: 'root',
-    password: 'Hab21@sql',
-    database: 'asbeza_db'
-     */
