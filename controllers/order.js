@@ -1,6 +1,5 @@
 const conn = require('../services/db');
 
-
 exports.getAllOrders = (req, res, next) => {
     conn.query("SELECT * FROM orders", (err,data,fields)=>{
         if(err) return next(err);
@@ -32,14 +31,16 @@ exports.createOrder = (req, res, next) => {
             && Object.getPrototypeOf(req.body) === Object.prototype) { 
             return next(new Error("no request body")); 
     }
-
-    const parsed = JSON.parse(req.body.order);
+    console.log(req.body);
+    const parsed = JSON.parse(req.body.orders);
+    console.log(parsed)
     const values = parsed.map(obj => Object.values(obj));
     
+    
     conn.query(
-        `INSERT INTO orders (orderNum, memberId, paymentOption, transactionNum, 
-            datetime, paymentStatus,deliveryStatus, remark,comment,totalPrice, 
-            itemId, count ) VALUES ? `, [values],
+        `INSERT INTO orders (order_number, member_id, payment_option, transaction_number, 
+            datetime, payment_status,delivery_status, remark,comment,total_price, 
+            product_id, count ) VALUES ? `, [values],
           (err,data,fields) =>{
             if(err) return next(err)
             res.status(200).json({
@@ -51,23 +52,24 @@ exports.createOrder = (req, res, next) => {
 }
 
 exports.updaeOrder = (req, res, next ) => {
+    console.log("The thing is");
     console.log(req.body);
     console.log(req.params.orderId)
     if(!req.params.orderId) {
         return next(new Error("No order id found"));
     }
-    const orderNum = req.body.orderNum;
+    const orderNum = req.body.orderId;
     conn.query(
         `UPDATE orders SET 
-            paymentStatus = ${req.body.paymentStatus ? 1 : 0},
-            deliveryStatus=${req.body.deliveryStatus ? 1 : 0},
+            payment_status = ${req.body.payment_status ? 1 : 0},
+            delivery_status=${req.body.delivery_status ? 1 : 0},
             remark=COALESCE(${req.body.remark 
                 ? '"'+req.body.remark+'"' 
                 : null}, '')
-            WHERE orderNum=?`,
+            WHERE order_number=?`,
             [orderNum],(err, data, fields) => {
             if(err) return next(err);
-            conn.query("SELECT * FROM orders WHERE orderNum=?", [orderNum],
+            conn.query("SELECT * FROM orders WHERE order_number=?", [orderNum],
             (err, data,fields)=>{
                 if(err) return next(err);
                 res.status(200).json({
@@ -82,11 +84,12 @@ exports.updaeOrder = (req, res, next ) => {
 
 exports.deleteOrder = (req, res, next) => {
     if(!req.params.orderId) {
-        return next(new Error("not orderNum found"));
+        return next(new Error("not order_number found"));
     }
     const orderNum = req.params.orderId;
+    console.log("The order number " + orderNum);
     conn.query(
-        "DELETE FROM orders WHERE orderNum=?",
+        "DELETE FROM orders WHERE order_number=?",
         [orderNum],(err,fields) => {
             if(err) return next(err);
             res.status(200).json({
@@ -104,17 +107,48 @@ exports.deleteMany = (req, res, next) => {
     console.log(arrOfid.id)
     console.log(arrOfid.id.length)
     const ids = arrOfid.id;
-    /*
-    ids.map(id => {
-        console.log("the id " , id);
-        conn.query(
-            "DELETE FROM orders WHERE id=?",
-            [id],(err,fields) => {
-                if(err) return next(err); 
-            }
-        )}
-    );
-    */
+    console.log("the ids " +  ids);
+
+    try {
+        for(let id of ids){
+            var order_number;
+            console.log(id)
+            conn.query(
+                "SELECT order_number FROM orders WHERE id=?",
+                [id],(err, data,fields) => {
+                    if(err) return next(err);
+                    order_number = data[0]['order_number'];
+                    console.log(data);
+                    console.log("order number", order_number)
+                    //the 
+                     conn.query(
+                        "DELETE FROM orders WHERE order_number=?",
+                        [order_number],(err,fields) => {
+                            if(err) return next(err);
+                            
+                        }
+                    )  
+                }
+            )
+            
+
+            /* 
+            conn.query(
+                "DELETE FROM orders WHERE order_number=?",
+                [order_number],(err,fields) => {
+                    if(err) return next(err);
+                    res.status(200).json({
+                        status: "success",
+                        message: "order deleted!"
+                    })
+                }
+            ) 
+            */   
+        }
+    } catch (error) {
+            console.log("errorr", error);
+    }
+    
     conn.query("SELECT * FROM orders", (err, data,fields)=>{
         if(err) return next(err);
         res.status(200).json({
