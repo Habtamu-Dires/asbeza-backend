@@ -10,7 +10,7 @@ orderRouter.use(bodyParser.json());
 orderRouter.route('/')
 .options(cors.corsWithOptions, (req,res)=>{res.sendStatus(200)})
 .get(cors.cors, controllers.getAllOrders)
-.post(cors.corsWithOptions, controllers.createOrder)
+.post(cors.cors, controllers.createOrder)
 .delete(cors.cors, controllers.deleteMany)
 
 //with id
